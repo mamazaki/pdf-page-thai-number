@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Page Numbering</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">PDF Page Numbering</h1>
+        <form id="pdfForm" class="mt-4">
+            <div class="form-group">
+                <label for="pdfFile">Select PDF File:</label>
+                <input type="file" id="pdfFile" class="form-control-file" accept="application/pdf" required>
+            </div>
+            <div class="form-group">
+                <label for="position">Position:</label>
+                <select id="position" class="form-control" onchange="updateMarginFields()">
+                    <option value="top-center">กลางบน</option>
+                    <option value="top-right">ขวาบน</option>
+                    <option value="bottom-center">กลางล่าง</option>
+                    <option value="bottom-right">ขวาล่าง</option>
+                </select>
+            </div>
+            <div id="marginFields" class="form-group">
+                <!-- Dynamic margin fields will be inserted here -->
+            </div>
+            <div class="form-group">
+                <label for="fontSize">Font Size:</label>
+                <input type="number" id="fontSize" class="form-control" value="12" min="1">
+            </div>
+            <div class="form-group">
+                <label for="fontWeight">Font Weight:</label>
+                <select id="fontWeight" class="form-control">
+                    <option value="normal">Normal</option>
+                    <option value="bold">Bold</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="pageNumbers">Pages to exclude (comma separated):</label>
+                <input type="text" id="pageNumbers" class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="numberType">Number Type:</label>
+                <select id="numberType" class="form-control">
+                    <option value="arabic">Arabic</option>
+                    <option value="thai">Thai</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Add Page Numbers</button>
+        </form>
+        <div id="result" class="mt-3"></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
