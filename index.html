@@ -79,7 +79,7 @@
     const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
     pdfDoc.registerFontkit(window.fontkit);
 
-    const fontBytes = await fetch('./fonts/THSarabun.ttf').then(res => res.arrayBuffer());
+    const fontBytes = await fetch('https://github.com/mamazaki/pdf-page-thai-number/blob/main/fonts/THSarabunNew.ttf').then(res => res.arrayBuffer());
     const customFont = await pdfDoc.embedFont(fontBytes);
 
     const pages = pdfDoc.getPages();
