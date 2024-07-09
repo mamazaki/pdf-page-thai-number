@@ -1,61 +1,149 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Page Numbering</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ระบบเติมเลขหน้าในไฟล์ PDF</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+  <script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
+  <style>
+    body {
+      font-family: 'TH Sarabun', sans-serif;
+    }
+  </style>
 </head>
 <body>
-    <div class="container mt-5">
-        <h1 class="text-center">PDF Page Numbering</h1>
-        <form id="pdfForm" class="mt-4">
-            <div class="form-group">
-                <label for="pdfFile">Select PDF File:</label>
-                <input type="file" id="pdfFile" class="form-control-file" accept="application/pdf" required>
-            </div>
-            <div class="form-group">
-                <label for="position">Position:</label>
-                <select id="position" class="form-control" onchange="updateMarginFields()">
-                    <option value="top-center">กลางบน</option>
-                    <option value="top-right">ขวาบน</option>
-                    <option value="bottom-center">กลางล่าง</option>
-                    <option value="bottom-right">ขวาล่าง</option>
-                </select>
-            </div>
-            <div id="marginFields" class="form-group">
-                <!-- Dynamic margin fields will be inserted here -->
-            </div>
-            <div class="form-group">
-                <label for="fontSize">Font Size:</label>
-                <input type="number" id="fontSize" class="form-control" value="12" min="1">
-            </div>
-            <div class="form-group">
-                <label for="fontWeight">Font Weight:</label>
-                <select id="fontWeight" class="form-control">
-                    <option value="normal">Normal</option>
-                    <option value="bold">Bold</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="pageNumbers">Pages to exclude (comma separated):</label>
-                <input type="text" id="pageNumbers" class="form-control">
-            </div>
-            <div class="form-group">
-                <label for="numberType">Number Type:</label>
-                <select id="numberType" class="form-control">
-                    <option value="arabic">Arabic</option>
-                    <option value="thai">Thai</option>
-                </select>
-            </div>
-            <button type="submit" class="btn btn-primary">Add Page Numbers</button>
-        </form>
-        <div id="result" class="mt-3"></div>
-    </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-    <script src="https://unpkg.com/@pdf-lib/fontkit@1.1.1/dist/fontkit.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.5.207/pdf.min.js"></script>
-    <script src="app.js"></script>
+<div class="container">
+  <h1 class="mt-5">ระบบเติมเลขหน้าในไฟล์ PDF</h1>
+  <form id="pdfForm">
+    <div class="form-group">
+      <label for="pdfFile">เลือกไฟล์ PDF:</label>
+      <input type="file" class="form-control-file" id="pdfFile" required>
+    </div>
+    <div class="form-group">
+      <label for="startPage">เริ่มต้นการนับหน้าที่หน้า:</label>
+      <input type="number" class="form-control" id="startPage" value="1" required>
+    </div>
+    <div class="form-group">
+      <label for="excludePages">หน้าที่ต้องการยกเว้น (คั่นด้วยเครื่องหมายจุลภาค):</label>
+      <input type="text" class="form-control" id="excludePages" placeholder="เช่น 1,3,5">
+    </div>
+    <div class="form-group">
+      <label for="numberType">ประเภทของเลขหน้า:</label>
+      <select class="form-control" id="numberType">
+        <option value="arabic">เลขอารบิก</option>
+        <option value="thai">เลขไทย</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="position">ตำแหน่งของเลขหน้า:</label>
+      <select class="form-control" id="position">
+        <option value="topCenter">กลางบน</option>
+        <option value="bottomCenter">กลางล่าง</option>
+        <option value="topRight">ขวาบน</option>
+        <option value="bottomRight">ขวาล่าง</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="offset">ระยะห่างจากขอบ (ซม.):</label>
+      <input type="number" class="form-control" id="offset" value="2" step="0.1" required>
+    </div>
+    <div class="form-group">
+      <label for="fileName">ชื่อไฟล์ที่ต้องการดาวน์โหลด:</label>
+      <input type="text" class="form-control" id="fileName" value="numbered">
+    </div>
+    <button type="submit" class="btn btn-primary">เพิ่มเลขหน้า</button>
+  </form>
+  <a id="downloadLink" class="btn btn-success mt-3" style="display:none;">ดาวน์โหลด PDF</a>
+</div>
+
+<script>
+  document.getElementById('pdfForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    
+    const fileInput = document.getElementById('pdfFile');
+    const startPage = parseInt(document.getElementById('startPage').value, 10);
+    const excludePages = document.getElementById('excludePages').value.split(',').map(Number).filter(Boolean);
+    const numberType = document.getElementById('numberType').value;
+    const position = document.getElementById('position').value;
+    const offsetCm = parseFloat(document.getElementById('offset').value);
+    const fileName = document.getElementById('fileName').value || 'numbered';
+    
+    const offset = offsetCm * 28.35; // Convert cm to points (1 cm = 28.35 points)
+
+    const file = fileInput.files[0];
+    const arrayBuffer = await file.arrayBuffer();
+
+    const pdfDoc = await PDFLib.PDFDocument.load(arrayBuffer);
+    pdfDoc.registerFontkit(window.fontkit);
+
+    const fontBytes = await fetch('./fonts/THSarabun.ttf').then(res => res.arrayBuffer());
+    const customFont = await pdfDoc.embedFont(fontBytes);
+
+    const pages = pdfDoc.getPages();
+
+    for (let i = 0; i < pages.length; i++) {
+      const pageIndex = i + 1;
+      if (excludePages.includes(pageIndex)) {
+        continue;
+      }
+
+      const page = pages[i];
+      const { width, height } = page.getSize();
+
+      const pageNumber = pageIndex - startPage + 1;
+      const pageNumberText = numberType === 'thai' ? convertToThaiNumber(pageNumber) : pageNumber.toString();
+
+      let x, y;
+      switch (position) {
+        case 'topCenter':
+          x = width / 2;
+          y = height - offset;
+          break;
+        case 'bottomCenter':
+          x = width / 2;
+          y = offset;
+          break;
+        case 'topRight':
+          x = width - offset;
+          y = height - offset;
+          break;
+        case 'bottomRight':
+          x = width - offset;
+          y = offset;
+          break;
+        default:
+          x = width / 2;
+          y = height - offset;
+      }
+
+      page.drawText(pageNumberText, {
+        x,
+        y,
+        size: 16,
+        font: customFont,
+        color: PDFLib.rgb(0, 0, 0),
+        align: PDFLib.TextAlignment.center,
+      });
+    }
+
+    const pdfBytes = await pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+    
+    const downloadLink = document.getElementById('downloadLink');
+    downloadLink.href = url;
+    downloadLink.download = `${fileName}.pdf`;
+    downloadLink.style.display = 'block';
+  });
+
+  function convertToThaiNumber(num) {
+    const thaiNumbers = ['๐', '๑', '๒', '๓', '๔', '๕', '๖', '๗', '๘', '๙'];
+    return num.toString().split('').map(digit => thaiNumbers[parseInt(digit)]).join('');
+  }
+</script>
+
 </body>
 </html>
